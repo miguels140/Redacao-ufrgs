@@ -1,0 +1,346 @@
+index.html
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Correção de Redações – Modelo UFRGS</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#151923; --muted:#9ba3b4; --text:#e6e8ee; --acc:#6ea8fe; --bad:#ff6b6b; --ok:#ffd166; --good:#5ee6a5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;background:var(--bg);color:var(--text)}
+  header{padding:18px 20px;border-bottom:1px solid #232836;position:sticky;top:0;background:linear-gradient(180deg, rgba(21,25,35,.95), rgba(21,25,35,.85))}
+  header h1{margin:0;font-size:20px}
+  main{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding:18px}
+  @media (max-width: 980px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid #232836;border-radius:14px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .card h2{margin:.2rem 0 1rem;font-size:18px}
+  textarea, input, select, button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2a3142;background:#0f141e;color:var(--text)}
+  textarea{min-height:280px;resize:vertical}
+  label{display:block;font-weight:600;margin:.6rem 0 .35rem;color:#c8d1e6}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#0f141e;border:1px solid #2a3142;color:var(--muted);font-size:12px;margin:3px 6px 3px 0}
+  .hint{color:var(--muted);font-size:13px}
+  .flex{display:flex;gap:10px;align-items:center}
+  .crit{display:grid;grid-template-columns:1.2fr .55fr;gap:8px;margin:.4rem 0}
+  .crit input[type="range"]{width:100%}
+  .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid #2a3142;background:#0f141e;color:#cbd5e1}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .warn{color:var(--bad)}
+  .okay{color:var(--ok)}
+  .good{color:var(--good)}
+  .score{font-size:40px;font-weight:800;letter-spacing:.5px}
+  .table{width:100%;border-collapse:collapse;margin-top:8px}
+  .table th,.table td{border-bottom:1px dashed #2a3142;padding:8px;text-align:left;font-size:14px}
+  .table th{color:#cbd5e1;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:6px 10px;background:#0f141e;border:1px dashed #2a3142;border-radius:999px;font-size:12px}
+  .btn{cursor:pointer}
+  .btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb);border:none}
+  .btn-ghost{background:#0f141e;border:1px solid #2a3142}
+  .right{justify-content:flex-end}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .kpi .card{padding:10px}
+  .kpi h3{margin:0;font-size:12px;color:#cbd5e1}
+  .kpi p{margin:2px 0 0;font-weight:700}
+  footer{padding:16px;color:#9ba3b4;text-align:center}
+</style>
+</head>
+<body>
+<header class="flex">
+  <h1>Correção de Redações — Modelo UFRGS</h1>
+  <div class="right" style="margin-left:auto;gap:8px" class="flex">
+    <button id="btnExport" class="btn btn-ghost">Imprimir / PDF</button>
+  </div>
+</header>
+
+<main>
+  <!-- Coluna 1: Redação e parâmetros -->
+  <section class="card">
+    <h2>1) Texto do candidato</h2>
+    <label for="tema">Tema/Proposta (digite o enunciado resumido)</label>
+    <input id="tema" placeholder="Ex.: “Impactos das redes sociais na democracia brasileira”" />
+    <label for="keywords">Palavras-chave do tema (separe por vírgula)</label>
+    <input id="keywords" placeholder="Ex.: redes sociais, democracia, desinformação, eleições" />
+    <div class="row">
+      <div>
+        <label for="minWords">Mínimo de palavras</label>
+        <input id="minWords" type="number" value="180" min="0" />
+      </div>
+      <div>
+        <label for="maxWords">Máximo (opcional)</label>
+        <input id="maxWords" type="number" placeholder="ex.: 30 linhas ≈ 300–360 palavras" />
+      </div>
+    </div>
+    <label for="texto">Cole a redação</label>
+    <textarea id="texto" placeholder="Cole aqui a redação do(a) candidato(a)..."></textarea>
+
+    <div class="flex right" style="margin-top:10px">
+      <button id="btnAnalyser" class="btn btn-primary">Analisar automaticamente</button>
+    </div>
+
+    <p class="hint">Dica: o botão acima gera métricas e um feedback inicial (não substitui a leitura humana!).</p>
+  </section>
+
+  <!-- Coluna 2: Rubrica, penalidades e resultados -->
+  <section class="card">
+    <h2>2) Rubrica de avaliação (preset “UFRGS”)</h2>
+    <div class="row">
+      <div>
+        <label for="preset">Preset</label>
+        <select id="preset">
+          <option value="ufrgs" selected>UFRGS (5 critérios x 20 pts)</option>
+          <option value="custom">Personalizar pesos/descrições</option>
+        </select>
+      </div>
+      <div>
+        <label>Total máximo</label>
+        <input id="totalMax" type="number" value="100" min="1" />
+      </div>
+    </div>
+
+    <div id="criteria"></div>
+
+    <h2 style="margin-top:14px">3) Penalidades automáticas</h2>
+    <div class="grid-3">
+      <label class="pill"><input id="penTema" type="checkbox" /> Fuga parcial ao tema (-40%)</label>
+      <label class="pill"><input id="penGrave" type="checkbox" /> Motivo eliminatório* (nota 0)</label>
+      <label class="pill"><input id="penMin" type="checkbox" /> Abaixo do mínimo (-20%)</label>
+    </div>
+    <p class="hint">*Ex.: folha em branco, cópia do texto motivador, texto injurioso, letra ilegível, idioma indevido, tema totalmente alheio.</p>
+
+    <h2 style="margin-top:14px">4) Resultado</h2>
+    <div class="kpi">
+      <div class="card">
+        <h3>Nota final</h3>
+        <p class="score" id="notaFinal">—</p>
+      </div>
+      <div class="card">
+        <h3>Palavras</h3>
+        <p id="kWords">—</p>
+      </div>
+      <div class="card">
+        <h3>Frases</h3>
+        <p id="kSent">—</p>
+      </div>
+      <div class="card">
+        <h3>Tempo de leitura</h3>
+        <p id="kRead">—</p>
+      </div>
+    </div>
+
+    <table class="table" id="tblDetalhe">
+      <thead><tr><th>Critério</th><th>Descrição</th><th>Peso</th><th>Nota (0–peso)</th></tr></thead>
+      <tbody></tbody>
+      <tfoot><tr><th colspan="2">Subtotal</th><th id="sumPeso">—</th><th id="sumNota">—</th></tr></tfoot>
+    </table>
+
+    <h2 style="margin-top:14px">5) Feedback</h2>
+    <div id="feedback" class="chips"></div>
+
+    <div class="flex right" style="margin-top:12px">
+      <button id="btnClear" class="btn btn-ghost">Limpar tudo</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <small>Modelo didático inspirado em critérios usuais de vestibulares (tema/proposta, estrutura, coerência e coesão, norma padrão, ortografia/pontuação) e em penalidades comuns. Ajuste os pesos conforme o edital vigente da UFRGS.</small>
+</footer>
+
+<script>
+/* ======== Preset UFRGS (ajustável) ======== */
+const PRESETS = {
+  ufrgs: [
+    {id:'tema',   titulo:'Adequação ao tema e à proposta', desc:'Desenvolve o tema solicitado, respeita a proposta e os limites do gênero dissertativo-argumentativo.', peso:20},
+    {id:'estrut', titulo:'Estrutura e argumentação', desc:'Introdução com tese, progressão lógica, repertório pertinente, conclusão consequente.', peso:20},
+    {id:'coesao', titulo:'Coesão e coerência', desc:'Use de conectores, referenciação, paragrafação; ausência de contradições e saltos lógicos.', peso:20},
+    {id:'lingua', titulo:'Linguagem e norma-padrão', desc:'Regência, concordância, colocação pronominal, adequação vocabular, formalidade.', peso:20},
+    {id:'orto',   titulo:'Ortografia e pontuação', desc:'Grafia, acentuação, segmentação, pontuação; legibilidade.', peso:20},
+  ],
+  custom: []
+};
+
+const el = s => document.querySelector(s);
+const els = s => [...document.querySelectorAll(s)];
+const criteriaWrap = el('#criteria');
+const tblBody = el('#tblDetalhe tbody');
+
+function renderCriteria(presetKey='ufrgs'){
+  criteriaWrap.innerHTML='';
+  tblBody.innerHTML='';
+  (PRESETS[presetKey].length ? PRESETS[presetKey] : PRESETS.ufrgs).forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'crit card';
+    row.style.padding='10px';
+    row.innerHTML = `
+      <div>
+        <label>${c.titulo}</label>
+        <div class="hint">${c.desc}</div>
+      </div>
+      <div>
+        <label>Peso (máx.)</label>
+        <input type="number" class="peso" data-id="${c.id}" min="1" value="${c.peso}">
+        <label style="margin-top:8px">Nota atribuída</label>
+        <input type="range" class="nota" data-id="${c.id}" min="0" max="${c.peso}" value="0" step="1">
+        <div style="display:flex;justify-content:space-between" class="hint">
+          <span>0</span><span class="badge"><span id="show-${c.id}">0</span> / <span id="max-${c.id}">${c.peso}</span></span><span>${c.peso}</span>
+        </div>
+      </div>
+    `;
+    criteriaWrap.appendChild(row);
+
+    // Linha na tabela de detalhe
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${c.titulo}</td><td>${c.desc}</td>
+      <td class="pesoCell" data-id="${c.id}">${c.peso}</td>
+      <td class="notaCell" data-id="${c.id}">0</td>`;
+    tblBody.appendChild(tr);
+  });
+  updateTotals();
+}
+renderCriteria();
+
+el('#preset').addEventListener('change', e=>renderCriteria(e.target.value));
+
+/* ======== Métricas automáticas ======== */
+function splitSentences(text){
+  return text
+   .replace(/\n+/g,' ')
+   .split(/(?<=[\.\!\?])\s+(?=[A-ZÀ-Ü0-9“"‘'])|(?<=;)\s+/u)
+   .filter(s=>s.trim().length>0);
+}
+function wordCount(text){
+  return (text.toLowerCase()
+    .replace(/[^\p{L}\p{N}\s\-’']/gu,' ')
+    .match(/\b[\p{L}\p{N}][\p{L}\p{N}\-’']*\b/gu)||[]).length;
+}
+function readingTime(words){
+  const wpm = 180; // média para texto denso
+  return Math.max(1, Math.round(words / wpm)) + ' min';
+}
+function keywordCoverage(text, keywords){
+  if(!keywords.length) return {hit:0, total:0, ratio:1};
+  const t = text.toLowerCase();
+  let hit=0;
+  keywords.forEach(k=>{
+    const needle = k.trim().toLowerCase();
+    if(!needle) return;
+    if (t.includes(needle)) hit++;
+  });
+  return {hit, total:keywords.filter(k=>k.trim()).length, ratio: keywords.length? hit/keywords.length : 1};
+}
+
+/* ======== Feedback gerado ======== */
+function buildFeedback({w,s,rt,ratio,keyMiss,belowMin,longMax}){
+  const chips=[];
+  if(ratio===1 && w>0) chips.push(['Aderência ao tema aparente','good']);
+  if(ratio<1 && ratio>=.5) chips.push(['Tema parcialmente contemplado','okay']);
+  if(ratio<.5) chips.push(['Possível fuga parcial ao tema','warn']);
+  if(s>=8) chips.push(['Boa extensão e desenvolvimento','good']);
+  if(s<4) chips.push(['Pouca progressão argumentativa','warn']);
+  if(w<180) chips.push(['Poucas palavras (pode penalizar)','warn']);
+  if(belowMin) chips.push(['Abaixo do mínimo configurado','warn']);
+  if(longMax) chips.push(['Acima do máximo configurado','okay']);
+  if(rt) chips.push([`Leitura estimada: ${rt}`, '']);
+  if(keyMiss.length) chips.push([`Palavras-chave ausentes: ${keyMiss.join(', ')}`,'okay']);
+  return chips.map(([t,cls])=>`<span class="chip ${cls}">${t}</span>`).join('');
+}
+
+/* ======== Eventos UI ======== */
+function updateTotals(){
+  let sumPeso=0, sumNota=0;
+  els('.peso').forEach(p=>{ sumPeso += Number(p.value||0); el(`#max-${p.dataset.id}`).textContent = p.value || 0; });
+  els('.nota').forEach(n=>{
+    // limitar ao novo peso
+    const max = Number(el(`#max-${n.dataset.id}`).textContent||0);
+    n.max = String(max);
+    if(Number(n.value)>max){ n.value = String(max); }
+    el(`#show-${n.dataset.id}`).textContent = n.value;
+    sumNota += Number(n.value||0);
+    el(`.notaCell[data-id="${n.dataset.id}"]`).textContent = n.value;
+  });
+  els('.pesoCell').forEach(td=>{
+    td.textContent = el(`#max-${td.dataset.id}`).textContent;
+  });
+  el('#sumPeso').textContent = sumPeso;
+  el('#sumNota').textContent = sumNota;
+  applyPenalties();
+}
+criteriaWrap.addEventListener('input', e=>{
+  if(e.target.matches('.peso,.nota')) updateTotals();
+});
+
+function applyPenalties(){
+  let base = Number(el('#sumNota').textContent||0);
+  const max = Number(el('#totalMax').value||100);
+  // normaliza se pesos ≠ totalMax
+  const sumPeso = Number(el('#sumPeso').textContent||max);
+  if(sumPeso>0 && sumPeso !== max){
+    base = (base / sumPeso) * max;
+  }
+  let final = base;
+  const belowMin = el('#penMin').checked;
+  const tema = el('#penTema').checked;
+  const elimin = el('#penGrave').checked;
+
+  if(tema) final *= 0.6;            // -40%
+  if(belowMin) final *= 0.8;        // -20%
+  if(elimin) final = 0;             // eliminatório
+
+  el('#notaFinal').textContent = final.toFixed(1);
+  return final;
+}
+
+el('#btnAnalyser').addEventListener('click', ()=>{
+  const text = el('#texto').value || '';
+  const words = wordCount(text);
+  const sentences = splitSentences(text);
+  const tema = (el('#tema').value||'').trim();
+  const keys = (el('#keywords').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+
+  // métricas
+  el('#kWords').textContent = words;
+  el('#kSent').textContent = sentences.length;
+  el('#kRead').textContent = readingTime(words);
+
+  // keyword coverage
+  const cov = keywordCoverage(text, keys);
+  const missing = keys.filter(k => !(text.toLowerCase().includes(k.toLowerCase())));
+
+  // auto-flags (marcam penalidades sugeridas; o avaliador pode desligar)
+  el('#penTema').checked = cov.total>0 && cov.ratio < 0.5;
+
+  // mínimo/máximo de palavras
+  const min = Number(el('#minWords').value||0);
+  const max = Number(el('#maxWords').value||0);
+  const belowMin = min>0 && words < min;
+  const longMax = max>0 && words > max;
+  el('#penMin').checked = belowMin;
+
+  // construir feedback
+  el('#feedback').innerHTML = buildFeedback({
+    w:words, s:sentences.length, rt:readingTime(words), ratio:cov.ratio, keyMiss:missing, belowMin, longMax
+  });
+
+  updateTotals();
+});
+
+el('#btnClear').addEventListener('click', ()=>{
+  ['texto','tema','keywords','minWords','maxWords'].forEach(id=>el('#'+id).value='');
+  els('input[type="checkbox"]').forEach(c=>c.checked=false);
+  els('.nota').forEach(n=>n.value=0);
+  updateTotals();
+  el('#feedback').innerHTML='';
+  ['#kWords','#kSent','#kRead','#notaFinal','#sumPeso','#sumNota'].forEach(id=>el(id).textContent='—');
+});
+
+el('#btnExport').addEventListener('click', ()=>window.print());
+
+/* Inicial: sincroniza totais */
+updateTotals();
+</script>
+</body>
+</html>
